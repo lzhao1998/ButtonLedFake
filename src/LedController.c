@@ -58,7 +58,7 @@ void tapTurnOnTapTurnOffLed(LedButtonInfo *info)
       1             0               1              1
       1             1               0           (wont happen)1
       1             1               1              1
-  */
+
   info->currentButtonState = getButtonState();
   int i,j,k,ans;
   i = info->currentLedState;
@@ -66,8 +66,9 @@ void tapTurnOnTapTurnOffLed(LedButtonInfo *info)
   k = info->previousButtonState;
   ans = j + (i * k);
   info->currentLedState = ans;
-  info->previousButtonState =info->currentButtonState;
-  /*switch(info->currentLedState)
+  info->previousButtonState = info->currentButtonState;*/
+  info->currentButtonState = getButtonState();
+  switch(info->currentLedState)
   {
     case 0:
       if(info->currentButtonState == 0 && info->previousButtonState == 0)
@@ -107,7 +108,7 @@ void tapTurnOnTapTurnOffLed(LedButtonInfo *info)
       info->currentLedState = info->currentLedState;
       info->previousButtonState = info->previousButtonState;
       break;
-  }*/
+  }
 }
 
 void doTapTapLedController()
