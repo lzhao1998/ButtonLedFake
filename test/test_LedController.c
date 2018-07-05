@@ -2,7 +2,9 @@
 #include "LedController.h"
 #include "mock_Button.h"
 #include "mock_Led.h"
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int turnLedCallNumbers = 0;
 int geTbuttonStateMaxCalls = 0;
@@ -13,20 +15,63 @@ LedState *expectedLedStates = NULL;
 void setUp(void){}
 void tearDown(void){}
 
+char *createMsg(char *format, ...)
+{
+  va_list valist;
+  int neededSize;
+  char *buffer;
+
+  va_start(valist,format);
+  neededSize = vsnprintf(NULL, 0, format, valist)+ 1;
+  buffer = malloc(neededSize);
+  vsnprintf(buffer,neededSize, format, valist);
+  va_end(valist);
+
+  return buffer;
+}
+
+void freeMsg(char *msg)
+{
+  if(msg){
+    free(msg);
+  }
+}
+
+char *getLedStateName(LedState state)
+{
+  switch(state)
+  {
+    case LED_ON:
+      return "LED_ON";
+      break;
+    case LED_OFF:
+      return "LED_OFF";
+      break;
+    default:
+    return "(unknown LED state)";
+      break;
+  }
+}
+
 void fake_turnLed(LedState state, int NumCalls)
 {
   //fake code live here
+  char *msg;
   turnLedCallNumbers++;
     if(NumCalls < expectedTurnLedMaxCalls)
     {
-      if(state != expectedLedStates[NumCalls])
-        TEST_FAIL_MESSAGE("turnLed() was called with (apa lan), but expect (what)");
+      LedState expectedState = expectedLedStates[NumCalls];
+      if(state != expectedLedStates)
+        msg = createMsg("turnLed() was called with %s, but expect %s", \
+                  getLedStateName(state), getLedStateName(expectedState));
+        TEST_FAIL_MESSAGE(msg);
     }
     else
     {
-      TEST_FAIL_MESSAGE("turnLed() was called with (apa lan), but expect (what)");
+      msg = createMsg("turnLed(%s) was called more times than expected", \
+                getLedStateName(state));
+      TEST_FAIL_MESSAGE(msg);
     }
-    ///////////////////////////////////////////////////NANI THE FUCK?/////////////////////
 }
 
 void fake_turnLedOn(LedState state, int NumCalls)
@@ -93,7 +138,7 @@ ButtonState fake_getButtonStateReleasedPressedReleased(int NumCalls)
       return BUTTON_RELEASED;
       break;
     case 2:
-      return BUTTON_RELEASED;
+      return BUTTON_PRESSED;
       break;
     case 3:
       return BUTTON_RELEASED;
@@ -143,23 +188,42 @@ void test_doTapTapTurnOn_given_button_is_taptap_when_led_off_expect_led_to_turn_
 
   TEST_ASSERT_EQUAL(LED_ON, info.currentLedState);
 }
-/*
+
 void test_doTapTapTurnOff_given_button_is_taptap_when_led_on_expect_led_to_turn_off(void)
 {
-  LedButtonInfo info = {LED_ON,BUTTON_RELEASED,BUTTON_RELEASED};
+  LedButtonInfo info = {LED_ON,BUTTON_RELEASED,BUTTON_PRESSED};
+  LedState expectedLedStates[] = {LED_OFF};
+  ButtonState buttonStates[] = {BUTTON_RELEASED, BUTTON_PRESSED, BUTTON_RELEASED};
 
-  turnLedCallNumbers = 0;
-  turnLed_StubWithCallback(fake_turnLedOff);
-  getButtonState_StubWithCallback(fake_getButtonStateReleasedPressedReleased);
+  setupFake(expectedLedStates, 1, buttonStates, 3);
 
   tapTurnOnTapTurnOffLed(&info);
   tapTurnOnTapTurnOffLed(&info);
-  turnLed_Expect(LED_OFF);
   tapTurnOnTapTurnOffLed(&info);
 
-  TEST_ASSERT_EQUAL(LED_OFF, info.currentLedState);
+  verifyTurnLedCalls(1);
+
+  TEST_ASSERT_EQUAL(LED_ON, info.currentLedState);
 }
 
+void test_nani_kore(void)
+{
+  LedButtonInfo info = {LED_ON,BUTTON_RELEASED,BUTTON_PRESSED};
+  LedState expectedLedStates[] = {LED_OFF};
+  ButtonState buttonStates[] = {BUTTON_RELEASED, BUTTON_PRESSED, BUTTON_RELEASED};
+
+  setupFake(expectedLedStates, 1, buttonStates, 3);
+
+  getButtonState();     //It should return RELEASED
+  getButtonState();     //It should return PRESSED
+  turnLed(LED_ON);
+  getButtonState();     //It should return RELEASED
+
+  verifyTurnLedCalls(1);
+
+  //TEST_ASSERT_EQUAL(LED_ON, info.currentLedState);
+}
+/*
 void test_doTapTapTurnOff_given_button_is_alway_pressed_when_led_on_expect_led_to_turn_on(void)
 {
   LedButtonInfo info = {LED_ON,BUTTON_RELEASED,BUTTON_RELEASED};

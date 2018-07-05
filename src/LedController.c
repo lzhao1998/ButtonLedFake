@@ -25,30 +25,6 @@ void doLedForever()
 
 void tapTurnOnTapTurnOffLed(LedButtonInfo *info)
 {
-  /*
-  LedState    ButtonState     LedOutput
-    0             0               0
-    0             1               1
-    1             0               0
-    1             1               1
-
-    if(info->currentLedState == 0 && info->currentButtonState == 0)
-    {
-      info->currentLedState = info->currentLedState;
-    }
-    else if(info->currentLedState == 0 && info->currentButtonState == 1)
-    {
-      info->currentLedState = 1;
-    }
-    else if(info->currentLedState == 1 && info->currentButtonState == 0)
-    {
-      info->currentLedState = 0;
-    }
-    else
-    {
-      info->currentLedState = info->currentLedState;
-    }*/
-/*
 /*    LedState    ButtonState   PreviousButton   LedOutput
       0             0               0              0
       0             0               1           (wont happen)0
@@ -66,7 +42,9 @@ void tapTurnOnTapTurnOffLed(LedButtonInfo *info)
   k = info->previousButtonState;
   ans = j + (i * k);
   info->currentLedState = ans;
-  info->previousButtonState = info->currentButtonState;*/
+  turnLed(info->currentLedState);
+  info->previousButtonState = info->currentButtonState;
+*/
   info->currentButtonState = getButtonState();
   switch(info->currentLedState)
   {
@@ -107,8 +85,10 @@ void tapTurnOnTapTurnOffLed(LedButtonInfo *info)
     default:
       info->currentLedState = info->currentLedState;
       info->previousButtonState = info->previousButtonState;
+      turnLed(info->currentLedState);
       break;
   }
+  turnLed(info->currentLedState);
 }
 
 void doTapTapLedController()
